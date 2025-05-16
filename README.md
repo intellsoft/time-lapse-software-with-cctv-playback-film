@@ -37,7 +37,6 @@
 # 📹 نرم‌افزار ساخت تایم‌لبس از دوربین‌های IP (با پشتیبانی از هایکویژن و داهوا)  
 **نسخه ۱.۰**  
 
----
 
 ## 🚀 ویژگی‌های کلیدی  
 - 🔒 پشتیبانی از دوربین‌های **هایکویژن** و **داهوا** با احراز هویت  
@@ -48,7 +47,6 @@
 - 📊 سیستم گزارش‌گیری خودکار با قابلیت بازبینی تاریخچه  
 - 🖥️ رابط کاربری گرافیکی ساده و کاربرپسند  
 
----
 
 ## 🛠️ نحوه‌ی استفاده  
 ۱. **تنظیمات دوربین**:  
@@ -64,14 +62,12 @@
    - تصاویر در پوشه‌ی انتخابی شما ذخیره می‌شوند.  
    - گزارش هر عملیات در تب «گزارش‌ها» قابل مشاهده است.  
 
----
 
 # 📹 IP Camera Time-lapse Software (Supports Hikvision & Dahua)  
 **Version 1.0**  
 
 [نرم افزار تبدیل فیلم دوربین مداربسته تایم لپس](https://intellsoft.ir/product/time-lapse-software-with-cctv-playback-film/)  
 
----
 
 ## 🚀 Key Features  
 - 🔒 Supports **Hikvision** & **Dahua** cameras with authentication  
@@ -82,7 +78,6 @@
 - 📊 Automated reporting system with history tracking  
 - 🖥️ Intuitive GUI for seamless operation  
 
----
 
 ## 🛠️ How to Use  
 1. **Camera Setup**:  
@@ -98,6 +93,5 @@
    - Images are saved in your chosen directory.  
    - View operation logs in the «Reports» tab.  
 
----
 
 🔗 **GitHub Repository**: [IP-Camera-Timelapse](https://github.com/intellsoft/time-lapse-software-with-cctv-playback-film)  
