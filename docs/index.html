@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site.seo.title }}</title>
+    <meta name="description" content="{{ site.seo.description }}">
+    <meta name="keywords" content="{{ site.seo.keywords | join: ', ' }}">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>{{ site.title }}</h1>
+                <p>{{ site.description }}</p>
+                <div class="cta-buttons">
+                    <a href="#download" class="btn primary-btn">دانلود نرم‌افزار</a>
+                    <a href="{{ site.github_repo }}" class="btn secondary-btn">مشاهده کد منبع</a>
+                </div>
+            </div>
+            <div class="header-image">
+                <img src="assets/screenshot.png" alt="نمای نرم‌افزار تایم‌لیپس و پخش تصاویر دوربین مداربسته">
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="features">
+            <h2>ویژگی‌های پیشرفته</h2>
+            <div class="features-grid">
+                {% for feature in site.features %}
+                <div class="feature-card">
+                    <div class="feature-icon">{{ feature.icon }}</div>
+                    <h3>{{ feature.title }}</h3>
+                    <p>{{ feature.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="applications">
+            <h2>کاربردهای تخصصی</h2>
+            <div class="applications-container">
+                <ul class="applications-list">
+                    {% for application in site.applications %}
+                    <li>{{ application }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <section id="workflow">
+            <h2>گردش کار نرم‌افزار</h2>
+            <div class="workflow-container">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <h3>ثبت تایم‌لیپس</h3>
+                    <p>ثبت خودکار تصاویر از دوربین‌ها در بازه‌های زمانی مشخص</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <h3>پردازش تصاویر</h3>
+                    <p>پردازش هوشمند تصاویر برای تشخیص رویدادهای مهم</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <h3>پخش پیشرفته</h3>
+                    <p>پخش تصاویر با قابلیت‌های جستجو، زوم و سرعت متغیر</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <h3>گزارش‌گیری</h3>
+                    <p>تولید گزارش‌های تحلیلی و خروجی‌های مختلف</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="benefits">
+            <h2>مزایای استفاده</h2>
+            <div class="benefits-container">
+                <div class="benefit">
+                    <h3>صرفه‌جویی در زمان</h3>
+                    <p>کاهش زمان بازبینی تصاویر طولانی مدت با استفاده از تایم‌لیپس</p>
+                </div>
+                <div class="benefit">
+                    <h3>افزایش امنیت</h3>
+                    <p>تشخیص خودکار رویدادهای مشکوک و ارسال هشدار</p>
+                </div>
+                <div class="benefit">
+                    <h3>مدیریت آسان</h3>
+                    <p>کنترل متمرکز چندین دوربین از طریق یک پلتفرم</p>
+                </div>
+                <div class="benefit">
+                    <h3>تحلیل پیشرفته</h3>
+                    <p>استخراج آمار و اطلاعات مفید از تصاویر ثبت شده</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="download">
+            <h2>دانلود نرم‌افزار</h2>
+            <div class="download-section">
+                <div class="version-info">
+                    <p>نسخه فعلی: <strong>2.1.0</strong></p>
+                    <p>آخرین بروزرسانی: <strong>15 شهریور 1403</strong></p>
+                    <div class="system-requirements">
+                        <h3>نیازمندی‌های سیستم:</h3>
+                        <ul>
+                            <li>ویندوز 10/11 یا سرور 2019+</li>
+                            <li>حداقل 8GB RAM</li>
+                            <li>500MB فضای خالی دیسک</li>
+                            <li>پردازنده Core i5 یا معادل</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="download-options">
+                    <div class="download-buttons">
+                        <a href="#" class="btn download-btn">
+                            <span class="os-icon">🪟</span>
+                            نسخه ویندوز
+                        </a>
+                        <a href="#" class="btn download-btn">
+                            <span class="os-icon">📀</span>
+                            نسخه سرور
+                        </a>
+                    </div>
+                    <div class="version-note">
+                        <p>نسخه آزمایشی 30 روزه رایگان با تمام ویژگی‌ها</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="testimonials">
+            <h2>نظرات کاربران</h2>
+            <div class="testimonials-container">
+                <div class="testimonial">
+                    <p>"این نرم‌افزار تحول بزرگی در نظارت بر پروژه ساخت‌وساز ما ایجاد کرد. امکان ثبت تایم‌لیپس و بازبینی سریع تصاویر، مدیریت پروژه را بسیار آسان کرده است."</p>
+                    <div class="author">
+                        <strong>مهندس رضا محمدی</strong>
+                        <span>مدیر پروژه، شرکت عمران سازه</span>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <p>"قابلیت‌های پخش پیشرفته و تشخیص حرکت، بازبینی تصاویر طولانی مدت را به کاری لذت‌بخش تبدیل کرده. در زمان ما صرفه‌جویی قابل توجهی شده است."</p>
+                    <div class="author">
+                        <strong>فاطمه حسینی</strong>
+                        <span>مسئول امنیت، مجتمع تجاری ستاره</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>نرم‌افزار تایم‌لیپس و پخش تصاویر دوربین مداربسته</h3>
+                    <p>راه‌حل جامع برای نظارت و تحلیل تصاویر امنیتی</p>
+                </div>
+                <div class="footer-links">
+                    <h4>لینک‌های مفید</h4>
+                    <ul>
+                        <li><a href="{{ site.github_repo }}">صفحه پروژه در GitHub</a></li>
+                        <li><a href="{{ site.author.url }}">وبسایت اینتل سافت</a></li>
+                        <li><a href="mailto:{{ site.author.email }}">پشتیبانی فنی</a></li>
+                        <li><a href="#">مستندات کاربری</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>ارتباط با ما</h4>
+                    <p>ایمیل: <a href="mailto:{{ site.author.email }}">{{ site.author.email }}</a></p>
+                    <p>وبسایت: <a href="{{ site.author.url }}">{{ site.author.url }}</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© {{ site.time | date: '%Y' }} توسعه داده شده توسط {{ site.author.name }}. تمامی حقوق محفوظ است.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
