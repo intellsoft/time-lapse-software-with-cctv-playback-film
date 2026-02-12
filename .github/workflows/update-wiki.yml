@@ -1,4 +1,4 @@
-name: Auto Extract Wiki Pages from Documentation
+name: Auto Extract Wiki Pages from Documentation (nav-link)
 
 on:
   schedule:
@@ -24,100 +24,129 @@ jobs:
           git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/intellsoft/time-lapse-software-with-cctv-playback-film.wiki.git wiki
           echo "✅ Wiki cloned successfully"
 
-      - name: Fetch source documentation page
+      - name: Fetch main documentation page
         run: |
-          curl -L "https://intellsoft.ir/docs/%d8%b1%d8%a7%d9%87%d9%86%d9%85%d8%a7%db%8c-%d9%86%d8%b1%d9%85-%d8%a7%d9%81%d8%b2%d8%a7%d8%b1-%d8%aa%d8%a8%d8%af%db%8c%d9%84-%d9%81%db%8c%d9%84%d9%85-%d8%af%d9%88%d8%b1%d8%a8%db%8c%d9%86-%d9%85%d8%af/" -o web-docs.html
-          echo "✅ Web page fetched"
+          curl -L "https://intellsoft.ir/docs/%d8%b1%d8%a7%d9%87%d9%86%d9%85%d8%a7%db%8c-%d9%86%d8%b1%d9%85-%d8%a7%d9%81%d8%b2%d8%a7%d8%b1-%d8%aa%d8%a8%d8%af%db%8c%d9%84-%d9%81%db%8c%d9%84%d9%85-%d8%af%d9%88%d8%b1%d8%a8%db%8c%d9%86-%d9%85%d8%af/" -o main.html
+          echo "✅ Main page fetched"
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install beautifulsoup4
+          pip install beautifulsoup4 requests
 
-      - name: Automatically detect article titles from web page
+      - name: Extract nav-links and fetch articles
         run: |
-          mkdir -p articles
+          mkdir -p articles_raw
           python3 - <<PYTHON
-          import re
+          import os
+          import requests
           from bs4 import BeautifulSoup
+          import re
 
-          with open("web-docs.html", encoding="utf-8") as f:
+          # ============ خواندن صفحه اصلی ============
+          with open("main.html", encoding="utf-8") as f:
               soup = BeautifulSoup(f, "html.parser")
 
-          # تشخیص محتوای اصلی صفحه (بسته به ساختار قالب سایت)
-          content_div = (
-              soup.find("div", class_="entry-content") or
-              soup.find("article") or
-              soup.find("main") or
-              soup.body
-          )
+          # یافتن تمام لینک‌های با کلاس nav-link
+          nav_links = soup.find_all("a", class_="nav-link")
+          print(f"✅ {len(nav_links)} لینک nav-link یافت شد.")
 
-          titles = []
-          seen = set()
+          # ایجاد فهرست نهایی مقالات
+          articles = []
 
-          # استراتژی ۱: استخراج از تمام المان‌هایی که محتمل هستند
-          for elem in content_div.find_all(["p", "li", "h2", "h3", "h4"]):
-              text = elem.get_text(strip=True)
-              if not text:
+          for idx, a in enumerate(nav_links, 1):
+              href = a.get("href")
+              title = a.get_text(strip=True)
+
+              if not href or not title:
                   continue
 
-              # معیارهای تشخیص عنوان مقاله:
-              # 1. طول متن بین 10 تا 150 کاراکتر باشد (عناوین معمولاً کوتاهند)
-              # 2. شامل کلمات کلیدی مرتبط با مستندات باشد (اختیاری اما دقت را بالا می‌برد)
-              # 3. قبلاً ثبت نشده باشد
-              # 4. شامل عبارت‌های تکراری عمومی نباشد (مثل "اشتراک گذاری" ، "تعداد بازدید")
-              if 10 < len(text) < 150:
-                  # فیلتر کردن جملات عمومی
-                  if any(word in text for word in ["اشتراک", "بازدید", "دیدگاه", "برچسب", "دسته"]):
-                      continue
-                  # حداقل یک کاراکتر فارسی داشته باشد
-                  if not re.search(r'[\u0600-\u06FF]', text):
-                      continue
-                  # جلوگیری از ثبت تکراری
-                  if text not in seen:
-                      seen.add(text)
-                      titles.append(text)
+              # ساخت URL کامل (اگر نسبی بود)
+              if href.startswith("/"):
+                  full_url = "https://intellsoft.ir" + href
+              else:
+                  full_url = href
 
-          # اگر با روش بالا عنوانی یافت نشد، استراتژی دوم:
-          # استخراج از لیست‌های مشخص (ممکن است در <ul> یا <ol> باشند)
-          if len(titles) == 0:
-              for ul in content_div.find_all(["ul", "ol"]):
-                  for li in ul.find_all("li"):
-                      text = li.get_text(strip=True)
-                      if 10 < len(text) < 150 and re.search(r'[\u0600-\u06FF]', text):
-                          if text not in seen:
-                              seen.add(text)
-                              titles.append(text)
+              print(f"  {idx}. دریافت مقاله: {title} از {full_url}")
 
-          # ذخیره عناوین در فایل
-          with open("articles/titles.txt", "w", encoding="utf-8") as f:
-              for title in titles:
-                  f.write(title + "\n")
+              # دریافت صفحه مقاله
+              try:
+                  response = requests.get(full_url, timeout=15)
+                  response.encoding = "utf-8"
+                  article_soup = BeautifulSoup(response.text, "html.parser")
+              except Exception as e:
+                  print(f"     ❌ خطا در دریافت: {e}")
+                  continue
 
-          print(f"✅ {len(titles)} عنوان مقاله تشخیص داده شد:")
-          for i, t in enumerate(titles, 1):
-              print(f"  {i}. {t}")
+              # استخراج عنوان مقاله (اولویت با h1، در غیر اینصورت همان title لینک)
+              page_title = article_soup.find("h1")
+              if page_title:
+                  article_title = page_title.get_text(strip=True)
+              else:
+                  article_title = title
+
+              # استخراج محتوای اصلی مقاله
+              # معمولاً در <article> یا <div class="entry-content"> قرار دارد
+              content_elem = (
+                  article_soup.find("article") or
+                  article_soup.find("div", class_="entry-content") or
+                  article_soup.find("div", class_="content") or
+                  article_soup.find("main")
+              )
+
+              if content_elem:
+                  # حذف تگ‌های غیرضروری (script, style, nav, footer)
+                  for tag in content_elem.find_all(["script", "style", "nav", "footer", "header"]):
+                      tag.decompose()
+
+                  # استخراج متن
+                  article_text = content_elem.get_text("\n", strip=True)
+                  # محدودیت طول (اختیاری)
+                  if len(article_text) > 50000:
+                      article_text = article_text[:50000] + "…"
+              else:
+                  article_text = "⚠️ محتوای مقاله یافت نشد."
+
+              # ذخیره اطلاعات
+              articles.append({
+                  "title": article_title,
+                  "url": full_url,
+                  "content": article_text
+              })
+
+              # ذخیره یک نسخه خام (برای دیباگ)
+              with open(f"articles_raw/article_{idx}.txt", "w", encoding="utf-8") as f:
+                  f.write(f"عنوان: {article_title}\n")
+                  f.write(f"URL: {full_url}\n")
+                  f.write("-" * 50 + "\n")
+                  f.write(article_text)
+
+          # ============ ذخیره فهرست نهایی ============
+          with open("articles_list.txt", "w", encoding="utf-8") as f:
+              for art in articles:
+                  # تولید نام فایل امن از عنوان
+                  slug = art["title"].replace(" ", "-")
+                  slug = re.sub(r'[\\/*?:"<>|]', '', slug)  # حذف کاراکترهای غیرمجاز
+                  slug = slug[:80].strip("-")
+                  f.write(f"{slug}\t{art['title']}\t{art['url']}\t{art['content']}\n")
+
+          print(f"\n✅ {len(articles)} مقاله با موفقیت پردازش شد.")
           PYTHON
 
-      - name: Generate Wiki pages from detected titles
+      - name: Create Wiki pages from articles
         run: |
           cd wiki
           
-          while IFS= read -r title; do
-            # ساخت نام فایل از عنوان (حفظ حروف فارسی، فقط حذف کاراکترهای غیرمجاز)
-            slug=$(echo "$title" | sed 's/[\/:*?"<>|]/-/g' | tr ' ' '-' | tr -s '-')
-            slug="${slug:0:80}"  # محدودیت طول
+          while IFS=$'\t' read -r slug title url content; do
             file="$slug.md"
             
-            echo "🔍 پردازش: $title -> $file"
-            
-            # اگر صفحه از قبل وجود دارد، بازنویسی نمی‌کنیم (می‌توانید شرط را بردارید)
+            # اگر صفحه از قبل وجود دارد، بازنویسی نمی‌کنیم (برای به‌روزرسانی، این شرط را بردارید)
             if [ -f "$file" ]; then
               echo "⏩ صفحه از قبل وجود دارد: $title"
               continue
             fi
             
-            echo "📝 ایجاد صفحه جدید: $title"
+            echo "📝 ایجاد صفحه ویکی: $title"
             
             {
               echo "# $title"
@@ -126,11 +155,12 @@ jobs:
               echo ""
               echo "---"
               echo ""
-              echo "🔗 **منبع:**"
-              echo ""
-              echo "[مشاهده صفحه کامل مستندات](https://intellsoft.ir/docs/%d8%b1%d8%a7%d9%87%d9%86%d9%85%d8%a7%db%8c-%d9%86%d8%b1%d9%85-%d8%a7%d9%81%d8%b2%d8%a7%d8%b1-%d8%aa%d8%a8%d8%af%db%8c%d9%84-%d9%81%db%8c%d9%84%d9%85-%d8%af%d9%88%d8%b1%d8%a8%db%8c%d9%86-%d9%85%d8%af/?utm_source=github_wiki&utm_medium=wiki&utm_campaign=cctv_timelapse)"
+              echo "$content"
               echo ""
               echo "---"
+              echo "🔗 **منبع اصلی:**"
+              echo ""
+              echo "👉 [$url]($url?utm_source=github_wiki&utm_medium=wiki&utm_campaign=cctv_timelapse)"
               echo ""
               echo "🔄 این صفحه به‌طور خودکار توسط GitHub Actions از آخرین نسخه مستندات به‌روزرسانی می‌شود."
               echo ""
@@ -141,7 +171,7 @@ jobs:
             echo "✅ صفحه ساخته شد: $file"
             echo "------------------------"
             
-          done < ../articles/titles.txt
+          done < ../articles_list.txt
 
       - name: Commit and push to Wiki
         run: |
