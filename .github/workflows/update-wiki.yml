@@ -1,8 +1,8 @@
-name: Publish CCTV Timelapse Software Docs To Wiki
+name: Publish CCTV Timelapse Web Docs To Wiki
 
 on:
   schedule:
-    # Sunday 21:30 UTC = Monday 01:00 Iran
+    # Sunday 23:30 UTC = Monday 03:00 Iran
     - cron: "30 23 * * 0"
   workflow_dispatch:
 
@@ -32,73 +32,48 @@ jobs:
           python -m pip install --upgrade pip
           pip install beautifulsoup4
 
-      - name: Extract documentation sections (Web + README)
+      - name: Extract specific topics from web page
         run: |
           mkdir -p articles
           python3 - <<PYTHON
-          import os
           from bs4 import BeautifulSoup
 
-          articles_data = []
-
-          # ============ بخش ۱: استخراج از README ریپازیتوری ============
-          readme_path = "main-repo/README.md"
-          if os.path.exists(readme_path):
-              with open(readme_path, "r", encoding="utf-8") as f:
-                  readme_content = f.read()
-              
-              # تقسیم README بر اساس هدرهای سطح ۲ (##)
-              sections = readme_content.split("\n## ")
-              for section in sections[1:]:  # بخش اول مقدمه بدون هدر است
-                  lines = section.split("\n")
-                  title = lines[0].strip()
-                  content = "\n".join(lines[1:]).strip()
-                  
-                  # حذف بخش انگلیسی تکراری در انتها
-                  if title in ["About", "Resources", "Releases", "Packages"]:
-                      continue
-                  
-                  # محدود کردن طول عنوان برای نام فایل
-                  slug = title.replace(" ", "-").replace(":", "").replace("/", "-")
-                  slug = "".join(c for c in slug if c.isalnum() or c == "-")[:40].strip("-")
-                  
-                  articles_data.append((slug, title, content, "readme"))
-          
-          # ============ بخش ۲: استخراج از صفحه وب ============
           with open("web-docs.html", encoding="utf-8") as f:
               soup = BeautifulSoup(f, "html.parser")
-          
-          # استخراج عناوین اصلی از صفحه راهنما (لیست موجود در محتوای صفحه)
+
+          # عناوین دقیق مورد نظر
+          target_titles = [
+              "نیازمندیهای سختافزاری و نرمافزاری",
+              "شروع کار با نرم افزار تبدیل فیلم به تایم لپس",
+              "اتصال به NVR از راه دور با آیپی استاتیک با نرم افزار تبدیل فیلم به تایم لپس",
+              "اتصال به دستگاه NVR/DVR در شبکه محلی (LAN) با نرم افزار تبدیل فیلم به تایم لپس"
+          ]
+
+          articles_data = []
           content_div = soup.find("div", class_="entry-content") or soup.find("article")
+
           if content_div:
               for p in content_div.find_all("p"):
                   text = p.get_text(strip=True)
-                  # عناوین فارسی که در محتوای صفحه هستند
-                  keywords = ["نیازمندیهای", "شروع کار", "اتصال به NVR", "شبکه محلی", "آیپی استاتیک"]
-                  if any(kw in text for kw in keywords) and len(text) < 100:
-                      title = text
-                      slug = title.replace(" ", "-").replace(":", "")
-                      slug = "".join(c for c in slug if c.isalnum() or c == "-")[:40].strip("-")
-                      
-                      # اگر این عنوان قبلاً از README استخراج نشده، اضافه کن
-                      if not any(title in t for _, t, _, _ in articles_data):
-                          articles_data.append((slug, title, f"این بخش از راهنمای رسمی نرم‌افزار استخراج شده است: [{title}](https://intellsoft.ir/docs/راهنمای-نرم-افزار-تبدیل-فیلم-دوربین-مد/)", "web"))
+                  for title in target_titles:
+                      if title in text and len(text) < 150:
+                          # ساخت نام فایل از عنوان
+                          slug = title.replace(" ", "-").replace("/", "-")
+                          slug = "".join(c for c in slug if c.isalnum() or c == "-")[:40].strip("-")
+                          articles_data.append((slug, title))
+                          break
 
-          # ============ نوشتن فایل لیست نهایی ============
+          # نوشتن فایل لیست
           with open("articles/list.txt", "w", encoding="utf-8") as out:
-              for slug, title, content, src in articles_data:
-                  # ذخیره خلاصه‌ای از محتوا برای پیش‌نمایش
-                  preview = content[:300].replace("\n", " ") + "..."
-                  out.write(f"{slug}\t{title}\t{preview}\t{src}\n")
+              for slug, title in articles_data:
+                  out.write(f"{slug}\t{title}\n")
           PYTHON
 
-      - name: Generate detailed Wiki pages
+      - name: Generate Wiki pages for each topic
         run: |
-          while IFS=$'\t' read -r slug title preview src; do
+          while IFS=$'\t' read -r slug title; do
             file="wiki/$slug.md"
             
-            # اگر صفحه وجود دارد و از README است، می‌توان به‌روزرسانی کرد (اختیاری)
-            # اینجا برای سادگی، فقط صفحات جدید ساخته می‌شوند
             if [ -f "$file" ]; then
               echo "Wiki page already exists: $title"
               continue
@@ -106,37 +81,20 @@ jobs:
             
             echo "Creating Wiki page: $title"
             
-            # ساخت صفحه ویکی
             {
               echo "# $title"
               echo ""
-              
-              if [ "$src" = "readme" ]; then
-                echo "📥 **منبع:** مستندات رسمی ریپازیتوری"
-              else
-                echo "🌐 **منبع:** راهنمای وبسایت"
-              fi
-              
+              echo "این صفحه از راهنمای رسمی نرم‌افزار **CCTV Timelapse Playback** استخراج شده است."
               echo ""
               echo "---"
               echo ""
-              
-              # برای بخش‌های README، محتوای کامل را از فایل اصلی می‌خوانیم
-              if [ "$src" = "readme" ]; then
-                # استخراج بخش کامل از README (اینجا ساده‌سازی شده)
-                echo "$preview" | sed 's/\.\.\.$//'
-                echo ""
-                echo "> ℹ️ برای مطالعه کامل این بخش، به [README اصلی](https://github.com/intellsoft/time-lapse-software-with-cctv-playback-film#readme) مراجعه کنید."
-              else
-                echo "$preview"
-                echo ""
-                echo "👉 **[مشاهده صفحه کامل راهنما]($(echo "https://intellsoft.ir/docs/راهنمای-نرم-افزار-تبدیل-فیلم-دوربین-مد/" | sed 's/ /%20/g'))**"
-              fi
-              
+              echo "👉 برای مطالعه کامل راهنما، به صفحه اصلی مراجعه کنید:"
+              echo ""
+              echo "[مشاهده صفحه کامل مستندات](https://intellsoft.ir/docs/%d8%b1%d8%a7%d9%87%d9%86%d9%85%d8%a7%db%8c-%d9%86%d8%b1%d9%85-%d8%a7%d9%81%d8%b2%d8%a7%d8%b1-%d8%aa%d8%a8%d8%af%db%8c%d9%84-%d9%81%db%8c%d9%84%d9%85-%d8%af%d9%88%d8%b1%d8%a8%db%8c%d9%86-%d9%85%d8%af/?utm_source=github_wiki&utm_medium=wiki&utm_campaign=cctv_timelapse)"
               echo ""
               echo "---"
               echo ""
-              echo "🔄 این صفحه به‌طور خودکار توسط GitHub Actions از مستندات نرم‌افزار **CCTV Timelapse Playback** به‌روزرسانی می‌شود."
+              echo "🔄 این صفحه به‌طور خودکار هر هفته توسط GitHub Actions به‌روزرسانی می‌شود."
               echo ""
               echo "📌 **توسعه‌دهنده:** علی عباس‌پور"
               
@@ -150,5 +108,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add .
-          git commit -m "Auto sync CCTV Timelapse Software documentation to Wiki" || exit 0
+          git commit -m "Auto sync CCTV Timelapse web documentation to Wiki" || exit 0
           git push
